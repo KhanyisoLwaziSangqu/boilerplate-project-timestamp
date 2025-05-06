@@ -21,32 +21,26 @@ app.get("/", function (req, res) {
 // Timestamp API endpoint
 app.get("/api/:date?", function (req, res) {
   const dateParam = req.params.date;
+  let date;
 
-  // No date param: use current time
+  // If no date param, use current date
   if (!dateParam) {
-    const now = new Date();
-    return res.json({
-      unix: now.getTime(),
-      utc: now.toUTCString()
-    });
+    date = new Date();
+  } else if (/^\d+$/.test(dateParam)) {
+    // If dateParam is only digits, treat as Unix timestamp (milliseconds)
+    date = new Date(parseInt(dateParam));
+  } else {
+    // Try parsing as a date string
+    date = new Date(dateParam);
   }
 
-  // Check if the dateParam is a valid UNIX timestamp (all digits)
-  if (/^\d+$/.test(dateParam)) {
-    const date = new Date(parseInt(dateParam));
-    return res.json({
-      unix: date.getTime(),
-      utc: date.toUTCString()
-    });
-  }
-
-  // Try parsing it as a standard date string
-  const date = new Date(dateParam);
-  if (date.toString() === "Invalid Date") {
+  // Check for invalid date
+  if (isNaN(date.getTime())) {
     return res.json({ error: "Invalid Date" });
   }
 
-  return res.json({
+  // Return valid date
+  res.json({
     unix: date.getTime(),
     utc: date.toUTCString()
   });
